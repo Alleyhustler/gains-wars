@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gains Wars - May the Gainss Be With You</title>
+    <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.2/firebase-app-compat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/firebase@9.22.2/firebase-firestore-compat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Electrolize&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jedi-blue: #00A2FF;
+            --sith-red: #FF3D5A;
+            --lightsaber-blue: #00F7FF;
+            --lightsaber-red: #FF003D;
+            --lightsaber-hilt: #C0C0C0;
+            --republic-gold: #FFD700;
+            --imperial-gray: #333333;
+            --starfield-dark: #0A0A1A;
+            --starfield-light: #1A1A2A;
+            --death-star: #AAAAAA;
+            --hyperdrive: #7700FF;
+            --success: #00E676;
+            --warning: #FFC107;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Electrolize', sans-serif;
+            background-color: var(--starfield-dark);
+            color: white;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 162, 255, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 90% 80%, rgba(255, 61, 90, 0.1) 0%, transparent 25%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><filter id="space-noise"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(%23space-noise)" opacity="0.1"/></svg>');
+        }
+
+        /* Starfield Animation */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 80px 40px, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 120px 90px, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 160px 60px, white, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 200px 30px, white, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            animation: stars 60s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-200px); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Star Wars Intro Scroll Effect */
+        .star-wars-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: var(--republic-gold);
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            animation: introFade 6s ease-in-out;
+        }
+
+        @keyframes introFade {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .star-wars-intro h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            text-shadow: 0 0 10px var(--republic-gold);
+        }
+
+        .star-wars-intro p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            line-height: 1.5;
+            text-shadow: 0 0 5px var(--republic-gold);
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-placeholder {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px dashed var(--republic-gold);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--republic-gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 0.5rem;
+        }
+        
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--jedi-blue), var(--hyperdrive));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 162, 255, 0.5);
+        }
+        
+        .current-round {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--republic-gold);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 1px solid var(--republic-gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .panel {
+            background: rgba(10, 10, 26, 0.8);
+            border-radius: 5px;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0, 162, 255, 0.1);
+            border: 1px solid rgba(0, 162, 255, 0.2);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--jedi-blue), var(--hyperdrive), var(--sith-red));
+        }
+        
+        .panel:hover {
+            border-color: rgba(0, 162, 255, 0.5);
+            box-shadow: 0 0 40px rgba(0, 162, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .panel-danger {
+            border-color: rgba(255, 61, 90, 0.2);
+        }
+
+        .panel-danger:hover {
+            border-color: rgba(255, 61, 90, 0.5);
+            box-shadow: 0 0 40px rgba(255, 61, 90, 0.2);
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            position: relative;
+            padding-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .panel-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--jedi-blue), var(--hyperdrive));
+            border-radius: 3px;
+        }
+
+        .panel-danger .panel-title::after {
+            background: linear-gradient(90deg, var(--hyperdrive), var(--sith-red));
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--jedi-blue), var(--hyperdrive));
+            color: black;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 45%,
+                rgba(255, 255, 255, 0.8) 50%,
+                rgba(255, 255, 255, 0) 55%
+            );
+            transform: rotate(30deg);
+            transition: all 0.3s;
+            opacity: 0;
+        }
+
+        .btn:hover::before {
+            animation: shine 1.5s infinite;
+            opacity: 1;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 162, 255, 0.5);
+            text-shadow: 0 0 5px white;
+        }
+        
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--hyperdrive), var(--sith-red));
+            box-shadow: 0 0 15px rgba(255, 61, 90, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 0 25px rgba(255, 61, 90, 0.5);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #FFD54F);
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-group::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--jedi-blue), var(--hyperdrive));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .input-group:focus-within::after {
+            transform: scaleX(1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--lightsaber-blue);
+            font-weight: 500;
+            font-size: 0.9rem;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 5px;
+            border: 1px solid rgba(0, 162, 255, 0.3);
+            background-color: rgba(15, 15, 35, 0.8);
+            color: white;
+            font-family: 'Electrolize', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--lightsaber-blue);
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.3);
+        }
+
+        /* Lightsaber Cursor Effect */
+        .lightsaber-cursor {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--lightsaber-blue);
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px 5px var(--lightsaber-blue);
+            animation: pulse 2s infinite;
+        }
+
+        .lightsaber-beam {
+            position: fixed;
+            width: 4px;
+            height: 60px;
+            background: linear-gradient(to bottom, var(--lightsaber-blue), transparent);
+            border-radius: 50% 50% 0 0;
+            pointer-events: none;
+            z-index: 9998;
+            transform-origin: top center;
+            transform: translate(-50%, 0) rotate(0deg);
+            filter: blur(1px);
+            box-shadow: 0 0 10px 2px var(--lightsaber-blue);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        body:hover .lightsaber-beam {
+            opacity: 1;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px 5px var(--lightsaber-blue); }
+            50% { box-shadow: 0 0 15px 7px var(--lightsaber-blue); }
+            100% { box-shadow: 0 0 10px 5px var(--lightsaber-blue); }
+        }
+        
+        .timer {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            text-align: center;
+            margin: 2rem 0;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--lightsaber-blue), var(--hyperdrive));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+            position: relative;
+        }
+
+        .timer::before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--lightsaber-blue), transparent);
+            border-radius: 3px;
+        }
+        
+        .phase-status {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--lightsaber-blue);
+            font-weight: 500;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .participant-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--jedi-blue) var(--starfield-dark);
+        }
+        
+        .participant-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .participant-list::-webkit-scrollbar-track {
+            background: var(--starfield-dark);
+            border-radius: 3px;
+        }
+        
+        .participant-list::-webkit-scrollbar-thumb {
+            background-color: var(--jedi-blue);
+            border-radius: 3px;
+        }
+        
+        .participant {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 0.75rem;
+            background-color: rgba(20, 20, 40, 0.6);
+            border-left: 3px solid var(--jedi-blue);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .participant::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0, 162, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .participant:hover::before {
+            opacity: 1;
+        }
+        
+        .participant:hover {
+            background-color: rgba(30, 30, 60, 0.8);
+            transform: translateX(5px);
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.2);
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        
+        .participant-holdings {
+            font-size: 0.9rem;
+            color: var(--lightsaber-blue);
+            font-family: 'Electrolize', sans-serif;
+        }
+        
+        .vote-btn {
+            background: rgba(255, 61, 90, 0.2);
+            color: var(--lightsaber-red);
+            border: 1px solid var(--sith-red);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vote-btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 45%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 55%
+            );
+            transform: translateX(-100%) rotate(30deg);
+            transition: all 0.3s;
+        }
+
+        .vote-btn:hover::after {
+            animation: lightsaberSlash 0.5s;
+        }
+
+        @keyframes lightsaberSlash {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        .vote-btn:hover {
+            background: rgba(255, 61, 90, 0.4);
+            text-shadow: 0 0 5px var(--lightsaber-red);
+            box-shadow: 0 0 10px rgba(255, 0, 61, 0.3);
+        }
+        
+        .vote-btn:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: #666;
+            border-color: #333;
+            cursor: not-allowed;
+        }
+        
+        .vote-btn.selected {
+            background: var(--sith-red);
+            color: white;
+            box-shadow: 0 0 10px 2px rgba(255, 0, 61, 0.5);
+            text-shadow: 0 0 5px white;
+        }
+        
+        .winner-display {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border-radius: 5px;
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid var(--success);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .winner-display::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="%2300E676" stroke-width="0.5" stroke-dasharray="5,5"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .winner-name {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--republic-gold);
+            margin-bottom: 0.5rem;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        
+        .winner-prize {
+            font-size: 1.5rem;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 5px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(0, 162, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 162, 255, 0.1) 0%,
+                transparent 50%,
+                rgba(119, 0, 255, 0.1) 100%
+            );
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 162, 255, 0.2);
+            border-color: rgba(0, 162, 255, 0.5);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--lightsaber-blue), var(--hyperdrive));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .rules-list {
+            list-style-type: none;
+        }
+        
+        .rules-list li {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-family: 'Electrolize', sans-serif;
+        }
+        
+        .rules-list li::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--lightsaber-blue);
+            font-size: 0.8rem;
+        }
+
+        .rules-list ol {
+            counter-reset: item;
+            list-style-type: none;
+        }
+
+        .rules-list ol li {
+            counter-increment: item;
+        }
+
+        .rules-list ol li::before {
+            content: counter(item) ".";
+            position: absolute;
+            left: 0;
+            color: var(--republic-gold);
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        /* Death Star Planet */
+        .death-star {
+            position: fixed;
+            bottom: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at 30% 30%, var(--death-star), #666);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 50px rgba(255, 255, 255, 0.1),
+                inset -50px -50px 100px rgba(0, 0, 0, 0.5);
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .death-star::before {
+            content: "";
+            position: absolute;
+            top: 25%;
+            left: 10%;
+            width: 30%;
+            height: 30%;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            box-shadow: 
+                inset 0 0 20px rgba(0, 0, 0, 0.8),
+                0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .death-star::after {
+            content: "";
+            position: absolute;
+            top: 30%;
+            left: 15%;
+            width: 20%;
+            height: 5%;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        /* X-Wing Animation */
+        .x-wing {
+            position: fixed;
+            top: 20%;
+            right: -200px;
+            width: 100px;
+            height: 50px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50"><path d="M10,25 L90,25 M50,5 L50,45 M10,25 L5,20 M10,25 L5,30 M90,25 L95,20 M90,25 L95,30" stroke="white" stroke-width="2"/></svg>');
+            background-repeat: no-repeat;
+            z-index: -1;
+            animation: xwingFly 15s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes xwingFly {
+            0% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(-100vw) translateY(100px); }
+            100% { transform: translateX(-200vw) translateY(0); }
+        }
+
+        /* Hyperdrive Jump Effect */
+        .hyperdrive {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--hyperdrive), transparent 70%);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            animation: hyperdriveJump 3s ease-out;
+        }
+
+        @keyframes hyperdriveJump {
+            0% { opacity: 0; transform: scale(0.1); }
+            50% { opacity: 0.8; }
+            100% { opacity: 0; transform: scale(3); }
+        }
+
+        /* Lightsaber Divider */
+        .lightsaber-divider {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--lightsaber-blue), var(--lightsaber-red), transparent);
+            margin: 2rem 0;
+            border-radius: 3px;
+            box-shadow: 0 0 10px var(--lightsaber-blue), 0 0 10px var(--lightsaber-red);
+        }
+
+        @media (max-width: 1024px) {
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+
+            .logo-placeholder {
+                width: 60px;
+                height: 60px;
+                font-size: 0.7rem;
+            }
+            
+            .panel {
+                padding: 1.5rem;
+            }
+            
+            .timer {
+                font-size: 2.5rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .death-star {
+                width: 200px;
+                height: 200px;
+                bottom: -50px;
+                right: -50px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Star Wars Crawl Animation */
+        .star-wars-crawl {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            perspective: 1000px;
+            z-index: 10000;
+            display: none;
+        }
+
+        .crawl-content {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 90%;
+            max-width: 800px;
+            transform: translateX(-50%) rotateX(45deg) translateY(100%);
+            transform-origin: 50% 100%;
+            animation: crawl 60s linear;
+            text-align: center;
+            color: var(--republic-gold);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .crawl-title {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            text-shadow: 0 0 10px var(--republic-gold);
+        }
+
+        .crawl-text {
+            font-size: 1.5rem;
+            line-height: 1.5;
+            text-shadow: 0 0 5px var(--republic-gold);
+        }
+
+        @keyframes crawl {
+            0% { transform: translateX(-50%) rotateX(45deg) translateY(100%); }
+            100% { transform: translateX(-50%) rotateX(45deg) translateY(-100%); }
+        }
+
+        /* Add this to your existing styles */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+                .logo-imgs {
+            height: 400px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(47, 48, 48, 0.7));
+            transition: all 0.3s ease;
+            margin-bottom: 40px;
+        }
+        .logo-img {
+            height: 80px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 247, 255, 0.7));
+            transition: all 0.3s ease;
+        }
+        
+        .logo-img:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 15px rgba(0, 247, 255, 0.9));
+        }
+        
+        /* If you want to use text instead of image, use this: */
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--lightsaber-blue), var(--hyperdrive));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Star Wars Intro Effect -->
+<div class="star-wars-intro" style="animation: introFade 0.8s ease-in-out;">
+    <div class="logo-containers">
+        <img src="BurnPool (4).png" alt="Bag Wars Logo" class="logo-imgs">
+    </div>
+        <p>A long time ago in a blockchain far, far away...</p>
+    </div>
+
+    <!-- Lightsaber Cursor Effect -->
+    <div class="lightsaber-cursor"></div>
+    <div class="lightsaber-beam"></div>
+
+    <!-- Death Star Background Element -->
+    <div class="death-star"></div>
+
+    <!-- X-Wing Animation -->
+    <div class="x-wing"></div>
+
+    <!-- Star Wars Crawl Container (hidden by default) -->
+    <div class="star-wars-crawl">
+        <div class="crawl-content">
+            <div class="crawl-title">Gains WARS</div>
+            <div class="crawl-text">
+                <p>Episode IV</p>
+                <p>A NEW HOPE FOR GainsHOLDERS</p>
+                <br>
+                <p>It is a period of civil war. Rebel Gainsholders, striking from hidden wallets, have won their first victory against the evil Paperhand Empire.</p>
+                <br>
+                <p>During the battle, Rebel spies managed to steal secret plans to the Empire's ultimate weapon, the DEATH STAR, a space station with enough selling pressure to destroy an entire token's price action.</p>
+                <br>
+                <p>Pursued by the Empire's sinister agents, Princess Diamond Hands races home aboard her starship, custodian of the stolen plans that can save her people and restore liquidity to the galaxy...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+<header>
+    <div class="logo-container">
+        <img src="BurnPool (4).png" alt="Bag Wars Logo" class="logo-img">
+    </div>
+    
+    <div class="header-right">
+        <div class="current-round">ROUND #<span id="current-round">1</span></div>
+        <a href="https://x.com/Gainswarscoin" class="twitter-link" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#1DA1F2">
+                <path d="M22.46 6.012a8.58 8.58 0 0 1-2.466.676 4.305 4.305 0 0 0 1.886-2.374 8.591 8.591 0 0 1-2.725 1.041 4.292 4.292 0 0 0-7.313 3.914 12.18 12.18 0 0 1-8.846-4.483 4.286 4.286 0 0 0 1.328 5.728 4.27 4.27 0 0 1-1.943-.537v.054a4.293 4.293 0 0 0 3.442 4.208 4.305 4.305 0 0 1-1.938.073 4.296 4.296 0 0 0 4.01 2.98 8.614 8.614 0 0 1-5.33 1.838c-.347 0-.687-.02-1.02-.059a12.15 12.15 0 0 0 6.574 1.927c7.883 0 12.2-6.54 12.2-12.2 0-.186-.004-.371-.012-.555a8.72 8.72 0 0 0 2.152-2.23z"/>
+            </svg>
+            <span>@Gainswarscoin</span>
+        </a>
+    </div>
+</header>
+
+<style>
+    /* Add to your existing CSS */
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .twitter-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #1DA1F2;
+        text-decoration: none;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        background: rgba(29, 161, 242, 0.1);
+        border: 1px solid rgba(29, 161, 242, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .twitter-link:hover {
+        background: rgba(29, 161, 242, 0.2);
+        box-shadow: 0 0 15px rgba(29, 161, 242, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    .twitter-link svg {
+        width: 20px;
+        height: 20px;
+        transition: transform 0.3s ease;
+    }
+    
+    .twitter-link:hover svg {
+        transform: scale(1.2);
+    }
+    
+    @media (max-width: 768px) {
+        .header-right {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .twitter-link {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+        }
+    }
+</style>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value" id="participant-count">3</div>
+                <div class="stat-label">Active Players</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="prize-pool">0 SOL</div>
+                <div class="stat-label">Prize Pool</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="next-battle">--:--</div>
+                <div class="stat-label">Next Battle</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="time-left">00:00</div>
+                <div class="stat-label">Time Remaining</div>
+            </div>
+        </div>
+        
+        <div class="game-grid">
+            <div class="panel float">
+                <h2 class="panel-title">BATTLE ARENA</h2>
+                <div class="timer" id="phase-timer">00:00</div>
+                <div class="phase-status" id="phase-status">Waiting for next battle...</div>
+                
+                <div id="entry-phase" class="hidden">
+                    <p>Submit your token holdings to enter the battle. You have 15 minutes.</p>
+                    <div class="input-group">
+                        <label for="token-address">Token Address</label>
+                        <input type="text" id="token-address" placeholder="Enter token contract address">
+                    </div>
+                    <div class="input-group">
+                        <label for="tx-hash">Transaction Hash (Proof)</label>
+                        <input type="text" id="tx-hash" placeholder="Enter Solscan TX hash">
+                    </div>
+                    <button id="submit-entry" class="btn">Submit Entry</button>
+                </div>
+                
+                <div id="battle-phase" class="hidden">
+                    <p>Vote for the weakest Gains holder to eliminate them!</p>
+                    <div class="participant-list" id="battle-participants">
+                        <!-- Participants will be added here dynamically -->
+                    </div>
+                    <button id="submit-vote" class="btn btn-danger hidden">Submit Vote</button>
+                </div>
+                
+                <div id="results-phase" class="hidden">
+                    <div class="winner-display">
+                        <div class="winner-name" id="winner-name">CHAMPION</div>
+                        <div class="winner-prize" id="winner-prize">0 SOL</div>
+                    </div>
+                    <canvas id="holdings-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="panel panel-danger">
+                <h2 class="panel-title">GALACTIC RULES</h2>
+                <ul class="rules-list">
+                    <li>During Entry Phase (15 min), submit proof of your token holdings with Solscan TX</li>
+                    <li>After entry closes, Battle Phase begins (30 min max duration)</li>
+                    <li>All participants vote for the wallet with the smallest holdings</li>
+                    <li>The holder with most votes gets eliminated immediately</li>
+                    <li>Process repeats until only one holder remains</li>
+                    <li>Last remaining holder wins the prize pool (random 5-10 SOL)</li>
+                    <li>New rounds start automatically every 2 hours</li>
+                    <li>No wallet connection needed - just prove your holdings</li>
+                </ul>
+                
+                <div class="lightsaber-divider"></div>
+
+                <h3 class="panel-title" style="margin-top: 2rem;">HOW TO PLAY</h3>
+                <ol class="rules-list">
+                    <li>Buy the memecoin (contract: TBA)</li>
+                    <li>Wait for entry phase to open</li>
+                    <li>Submit your wallet address and TX proof</li>
+                    <li>Defend your Gains during battle phase</li>
+                    <li>Eliminate weaker holders to survive</li>
+                </ol>
+
+                <button id="crawl-btn" class="btn" style="margin-top: 2rem; width: 100%;">VIEW STAR WARS CRAWL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase initialization
+        const firebaseConfig = {
+            apiKey: "A",
+            authDomain: "degen-hunger.firebaseapp.com",
+            projectId: "degen-hunger",
+            storageBucket: "degen-hunger.appspot.com",
+            messagingSenderId: "133251693123",
+            appId: "1:133251693123:web:568deb489f4e49c5cef2f6",
+            measurementId: "G-FBXSKZRC5Q"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Game state
+        let gameState = {
+            currentPhase: 'waiting', // waiting, entry, battle, results
+            currentRound: 1,
+            participants: {},
+            votes: {},
+            battleStartTime: null,
+            entryEndTime: null,
+            battleEndTime: null,
+            timerInterval: null,
+            userEntry: null,
+            userVote: null,
+            prizePool: 0
+        };
+        
+        // DOM elements
+        const submitEntryBtn = document.getElementById('submit-entry');
+        const submitVoteBtn = document.getElementById('submit-vote');
+        const phaseTimer = document.getElementById('phase-timer');
+        const phaseStatus = document.getElementById('phase-status');
+        const entryPhase = document.getElementById('entry-phase');
+        const battlePhase = document.getElementById('battle-phase');
+        const resultsPhase = document.getElementById('results-phase');
+        const battleParticipants = document.getElementById('battle-participants');
+        const winnerName = document.getElementById('winner-name');
+        const winnerPrize = document.getElementById('winner-prize');
+        const currentRoundDisplay = document.getElementById('current-round');
+        const participantCount = document.getElementById('participant-count');
+        const prizePoolDisplay = document.getElementById('prize-pool');
+        const nextBattleDisplay = document.getElementById('next-battle');
+        const timeLeftDisplay = document.getElementById('time-left');
+        const crawlBtn = document.getElementById('crawl-btn');
+        const crawlContainer = document.querySelector('.star-wars-crawl');
+        let holdingsChart = null;
+
+        // Lightsaber cursor effect
+        const cursor = document.querySelector('.lightsaber-cursor');
+        const beam = document.querySelector('.lightsaber-beam');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            // Calculate angle for lightsaber beam
+            const angle = Math.atan2(e.movementY, e.movementX) * (180 / Math.PI);
+            beam.style.left = e.clientX + 'px';
+            beam.style.top = e.clientY + 'px';
+            beam.style.transform = `translate(-50%, 0) rotate(${angle}deg)`;
+        });
+
+        // Hyperdrive jump effect
+        function hyperdriveJump() {
+            const hyperdrive = document.createElement('div');
+            hyperdrive.className = 'hyperdrive';
+            document.body.appendChild(hyperdrive);
+            
+            setTimeout(() => {
+                hyperdrive.remove();
+            }, 3000);
+        }
+
+        // Star Wars crawl effect
+        crawlBtn.addEventListener('click', () => {
+            crawlContainer.style.display = 'block';
+            const crawlContent = document.querySelector('.crawl-content');
+            crawlContent.style.animation = 'crawl 60s linear';
+            
+            setTimeout(() => {
+                crawlContainer.style.display = 'none';
+                crawlContent.style.animation = 'none';
+                setTimeout(() => {
+                    crawlContent.style.animation = '';
+                }, 10);
+            }, 60000);
+        });
+        
+        // Generate random prize pool between 5-10 SOL
+        function generatePrizePool() {
+            gameState.prizePool = (Math.random() * 5 + 5).toFixed(2);
+            prizePoolDisplay.textContent = `${gameState.prizePool} SOL`;
+            return gameState.prizePool;
+        }
+        
+        // Submit entry to the game
+        async function submitEntry() {
+            const tokenAddress = document.getElementById('token-address').value.trim();
+            const txHash = document.getElementById('tx-hash').value.trim();
+            
+            if (!tokenAddress || !txHash) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            try {
+                // Generate a random wallet address for the user (since we're not connecting real wallets)
+                const userWallet = `User${Math.floor(Math.random() * 10000)}...${Math.floor(Math.random() * 1000)}`;
+                
+                const entryData = {
+                    walletAddress: userWallet,
+                    tokenAddress: tokenAddress,
+                    txHash: txHash,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    holdings: Math.floor(Math.random() * 10000) + 1000, // Random holdings for demo
+                    round: gameState.currentRound
+                };
+                
+                // Add to Firestore
+                await db.collection('entries').doc(userWallet).set(entryData);
+                
+                // Update local state
+                gameState.userEntry = entryData;
+                gameState.participants[userWallet] = entryData;
+                
+                submitEntryBtn.disabled = true;
+                submitEntryBtn.textContent = 'Entry Submitted';
+                
+                // Update participant count
+                participantCount.textContent = Object.keys(gameState.participants).length;
+                
+                console.log('Entry submitted successfully');
+            } catch (error) {
+                console.error('Error submitting entry:', error);
+                alert('Error submitting entry: ' + error.message);
+            }
+        }
+        
+        // Submit vote for elimination
+        async function submitVote() {
+            if (!gameState.userVote) {
+                alert('Please select a participant to vote off');
+                return;
+            }
+            
+            try {
+                const voteData = {
+                    voter: gameState.userEntry.walletAddress,
+                    votedFor: gameState.userVote,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    round: gameState.currentRound
+                };
+                
+                // Add to Firestore
+                await db.collection('votes').doc(`${gameState.userEntry.walletAddress}_${gameState.currentRound}`).set(voteData);
+                
+                // Update local state
+                gameState.votes[gameState.userEntry.walletAddress] = gameState.userVote;
+                
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.textContent = 'Vote Submitted';
+                
+                console.log('Vote submitted successfully');
+            } catch (error) {
+                console.error('Error submitting vote:', error);
+                alert('Error submitting vote: ' + error.message);
+            }
+        }
+        
+        // Update timer display
+        function updateTimer() {
+            const now = new Date();
+            let timeLeft = 0;
+            let timerText = '';
+            
+            if (gameState.currentPhase === 'entry' && gameState.entryEndTime) {
+                timeLeft = Math.max(0, gameState.entryEndTime - now);
+                const minutes = Math.floor(timeLeft / (60 * 1000));
+                const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+                timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                phaseStatus.textContent = `Entry Phase - ${Object.keys(gameState.participants).length} participants`;
+                timeLeftDisplay.textContent = timerText;
+            } 
+            else if (gameState.currentPhase === 'battle' && gameState.battleEndTime) {
+                timeLeft = Math.max(0, gameState.battleEndTime - now);
+                const minutes = Math.floor(timeLeft / (60 * 1000));
+                const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+                timerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                phaseStatus.textContent = `Battle Phase - Vote to eliminate!`;
+                timeLeftDisplay.textContent = timerText;
+            } 
+            else {
+                timerText = '00:00';
+                timeLeftDisplay.textContent = '--:--';
+            }
+            
+            phaseTimer.textContent = timerText;
+        }
+        
+        // Update game phase UI
+        function updatePhaseUI() {
+            // Hide all phases first
+            entryPhase.classList.add('hidden');
+            battlePhase.classList.add('hidden');
+            resultsPhase.classList.add('hidden');
+            
+            // Show current phase
+            switch (gameState.currentPhase) {
+                case 'entry':
+                    entryPhase.classList.remove('hidden');
+                    break;
+                case 'battle':
+                    battlePhase.classList.remove('hidden');
+                    updateBattleParticipants();
+                    break;
+                case 'results':
+                    resultsPhase.classList.remove('hidden');
+                    showResults();
+                    break;
+                default:
+                    // waiting phase
+                    break;
+            }
+        }
+        
+        // Update battle participants list
+        function updateBattleParticipants() {
+            battleParticipants.innerHTML = '';
+            
+            Object.entries(gameState.participants).forEach(([address, data]) => {
+                const participantEl = document.createElement('div');
+                participantEl.className = 'participant';
+                
+                const infoEl = document.createElement('div');
+                infoEl.className = 'participant-info';
+                infoEl.innerHTML = `
+                    <div class="participant-name">${address}</div>
+                    <div class="participant-holdings">Holdings: ${data.holdings.toLocaleString()}</div>
+                `;
+                
+                const voteEl = document.createElement('button');
+                voteEl.className = 'vote-btn';
+                voteEl.textContent = 'Vote Off';
+                voteEl.disabled = gameState.userVote === address || 
+                                 (gameState.userEntry && gameState.votes[gameState.userEntry.walletAddress]) || 
+                                 (gameState.userEntry && address === gameState.userEntry.walletAddress);
+                
+                voteEl.addEventListener('click', () => {
+                    gameState.userVote = address;
+                    // Highlight selected
+                    document.querySelectorAll('.vote-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    voteEl.classList.add('selected');
+                    submitVoteBtn.classList.remove('hidden');
+                });
+                
+                participantEl.appendChild(infoEl);
+                participantEl.appendChild(voteEl);
+                battleParticipants.appendChild(participantEl);
+            });
+            
+            // Only show submit vote if user hasn't voted yet
+            if (gameState.userEntry && !gameState.votes[gameState.userEntry.walletAddress]) {
+                submitVoteBtn.classList.remove('hidden');
+            } else {
+                submitVoteBtn.classList.add('hidden');
+            }
+        }
+        
+        // Show results of the battle
+        function showResults() {
+            // Determine winner (participant with highest holdings)
+            const participants = Object.values(gameState.participants);
+            let winner = participants[0];
+            
+            participants.forEach(p => {
+                if (p.holdings > winner.holdings) {
+                    winner = p;
+                }
+            });
+            
+            winnerName.textContent = winner.walletAddress;
+            winnerPrize.textContent = `${gameState.prizePool} SOL`;
+            
+            // Show chart of holdings
+            renderHoldingsChart();
+        }
+        
+        // Render chart of participant holdings
+        function renderHoldingsChart() {
+            const ctx = document.getElementById('holdings-chart').getContext('2d');
+            const participants = Object.values(gameState.participants);
+            
+            if (holdingsChart) {
+                holdingsChart.destroy();
+            }
+            
+            holdingsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: participants.map(p => p.walletAddress),
+                    datasets: [{
+                        label: 'Token Holdings',
+                        data: participants.map(p => p.holdings),
+                        backgroundColor: participants.map(p => 
+                            gameState.userEntry && p.walletAddress === gameState.userEntry.walletAddress 
+                                ? 'rgba(0, 247, 255, 0.8)' 
+                                : 'rgba(119, 0, 255, 0.8)'
+                        ),
+                        borderColor: 'rgba(10, 10, 26, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Holdings: ${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Simulate game state updates
+        function simulateGameState() {
+            // Start a new round every 2 hours for demo purposes
+            setInterval(() => {
+                // Hyperdrive jump effect between rounds
+                hyperdriveJump();
+                
+                gameState.currentRound++;
+                gameState.currentPhase = 'entry';
+                gameState.participants = {};
+                gameState.votes = {};
+                gameState.userEntry = null;
+                gameState.userVote = null;
+                
+                currentRoundDisplay.textContent = gameState.currentRound;
+                participantCount.textContent = '0';
+                generatePrizePool();
+                
+                const now = new Date();
+                gameState.entryEndTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 min from now
+                gameState.battleEndTime = new Date(gameState.entryEndTime.getTime() + 30 * 60 * 1000); // 30 min after entry ends
+                
+                // Calculate next battle time for display
+                const nextBattleTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+                nextBattleDisplay.textContent = nextBattleTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                updatePhaseUI();
+                
+                // Simulate participants joining
+                const fakeParticipants = [
+                    { walletAddress: `Jedi${Math.floor(Math.random() * 1000)}...1337`, holdings: Math.floor(Math.random() * 10000) + 1000 },
+                    { walletAddress: `Sith${Math.floor(Math.random() * 1000)}...420`, holdings: Math.floor(Math.random() * 10000) + 1000 },
+                    { walletAddress: `Rebel${Math.floor(Math.random() * 1000)}...888`, holdings: Math.floor(Math.random() * 10000) + 1000 },
+                    { walletAddress: `Empire${Math.floor(Math.random() * 1000)}...666`, holdings: Math.floor(Math.random() * 10000) + 1000 }
+                ];
+                
+                fakeParticipants.forEach(p => {
+                    gameState.participants[p.walletAddress] = p;
+                });
+                
+                participantCount.textContent = Object.keys(gameState.participants).length;
+                
+                // After entry phase, move to battle phase
+                setTimeout(() => {
+                    gameState.currentPhase = 'battle';
+                    updatePhaseUI();
+                }, 15 * 60 * 1000);
+                
+                // After battle phase, show results
+                setTimeout(() => {
+                    gameState.currentPhase = 'results';
+                    updatePhaseUI();
+                }, 45 * 60 * 1000);
+                
+            }, 2 * 60 * 60 * 1000); // 2 hour rounds for demo
+            
+            // Start first round immediately
+            gameState.currentRound = 1;
+            gameState.currentPhase = 'entry';
+            const now = new Date();
+            gameState.entryEndTime = new Date(now.getTime() + 15 * 60 * 1000);
+            gameState.battleEndTime = new Date(gameState.entryEndTime.getTime() + 30 * 60 * 1000);
+            
+            // Set next battle time
+            const nextBattleTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+            nextBattleDisplay.textContent = nextBattleTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Generate initial prize pool
+            generatePrizePool();
+            
+            updatePhaseUI();
+        }
+        
+        // Initialize the app
+        function init() {
+            // Set up event listeners
+            submitEntryBtn.addEventListener('click', submitEntry);
+            submitVoteBtn.addEventListener('click', submitVote);
+            
+            // Set up timer
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+            
+            // Update UI
+            updatePhaseUI();
+            
+            // Simulate game state (replace with real Firestore listeners in production)
+            simulateGameState();
+        }
+        
+        // Start the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
